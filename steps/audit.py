@@ -1,4 +1,9 @@
 """Audit trail: one line per order with its revenue (audit_2025.csv)."""
+# Fix generated with Claude (Anthropic). Prompt: "ok start with the fixes for task 1 then we continue".
+# The output file is opened once, before the loop, instead of once per order.
+# Python buffers the lines and hands them to the kernel in large writes, so the
+# number of openat/write/close system calls no longer grows with the number of orders.
+# Note: closing a file never guaranteed the data was on disk; only fsync() does that.
 
 import os
 
@@ -12,10 +17,7 @@ path = os.path.join(OUT, "audit_2025.csv")
 orders = pd.read_csv(DATA, usecols=["order_id", "region", "quantity", "unit_price"])
 orders["revenue"] = orders["quantity"] * orders["unit_price"]
 
-open(path, "w").close()
-for order in orders.itertuples():
-    # Open and close the file for every order, so that each line is
-    # saved on disk even if the job crashes halfway.
-    with open(path, "a") as f:
+with open(path, "w") as f:
+    for order in orders.itertuples():
         f.write(f"{order.order_id},{order.region},{order.revenue:.2f}\n")
 print(f"audit: {len(orders):,} lines written")
