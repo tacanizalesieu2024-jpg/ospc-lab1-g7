@@ -155,3 +155,26 @@ Increasing workers beyond 4 did not improve average performance on this sample. 
 The 2-worker configuration showed substantial run-to-run variation, illustrating the importance of repeated measurements.
 
 These results describe the sample workload and should not be assumed to represent performance on the full dataset.
+
+## Task 5 — Signal Handling Investigation
+
+### Code inspection
+
+The current stats.sh script launches background Python workers using & and waits for their completion with wait.
+
+No explicit trap or worker cleanup logic was found in stats.sh.
+
+The stats_worker.py script performs 1,000 bootstrap resamples per region-month and writes its results into a separate CSV file.
+
+### Process management observations
+
+- & starts a command in the background.
+- wait waits for background child processes.
+- SIGINT commonly results from Ctrl+C.
+- SIGTERM requests process termination.
+- SIGKILL cannot be caught or ignored.
+- trap can be used to implement shell signal handling and cleanup.
+
+The current parent script does not explicitly guarantee child-process cleanup if interrupted. This was identified through code inspection, not demonstrated by an interruption experiment.
+
+No stats_worker.py processes were running when checked with ps.
