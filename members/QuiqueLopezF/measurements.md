@@ -82,3 +82,32 @@ segments: done
    100004    0.016    0.000    0.059    0.000 locale.py:469(_parse_localename)
    100004    0.014    0.000    0.110    0.000 _strptime.py:29(_getlang)
     68/37    0.014    0.000    0.047    0.001 {built-in method _imp.exec_dynamic}
+
+## Task 5 - Computing the Statistics
+
+CPUs available in Docker: 8
+Default workers: 16
+
+Ctrl+C experiment:
+The script was interrupted after "stats: input ready".
+After running ps -ef, no worker processes were visible.
+
+This observation does not confirm whether workers had already finished.
+
+
+### Worker experiment results
+
+| Workers | Average elapsed time (s) |
+|---|---:|
+| 1 | 28.53 |
+| 2 | 15.30 |
+| 4 | 8.50 |
+| 8 | 6.84 |
+| 16 | 7.87 |
+
+The best performance was achieved with 8 workers.
+
+The Docker container has 8 CPUs available. Increasing the
+number of workers from 8 to 16 made execution slower because
+more processes competed for the same CPU resources.
+
