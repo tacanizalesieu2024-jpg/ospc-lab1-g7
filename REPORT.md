@@ -30,8 +30,8 @@ not whole screens.
   - `echo ${PIPESTATUS[@]}`: printed `2 0 0`: grep failed with status 2 (error), while cut and wc succeeded with 0.
   - `pwd`: confirmed the working folder was /home/analyst/data/out/extracts.
 - Cause: The input path is relative, and it is resolved from the folder the script moved into. From /home/analyst/data/out/extracts, `../data/sales_2025.csv` means /home/analyst/data/out/data/sales_2025.csv, which does not exist; the real file is /home/analyst/data/sales_2025.csv. grep could not open it, so cut received no input and each region file was created empty by the redirection. `2>/dev/null` hid grep's error message. The status of a pipeline is the status of its last command (cut, 0), and the status of the script is that of its last command (`echo "extracts: done"`, 0), so the failure was never reported. The script also ignores the DATA variable that the other steps use.
-- Fix: (to do)
-- Before and after (your measurements): Before: exit status 0, six files of 0 bytes. After: (to do)
+- Fix: extracts.sh no longer changes directory; it reads the input from DATA (default $HOME/data/sales_2025.csv, an absolute path) like the other steps, and writes to $OUT/extracts. It starts with set -euo pipefail, so a failing command or pipeline stops the script with a non-zero status, and 2>/dev/null was removed so grep's errors are visible. grep's status 1 (no matching orders) is accepted, because a region without orders is not an error.
+- Before and after (your measurements): Before: exit status 0, six files of 0 bytes. After: the six files have 1,006,912 (Benelux), 1,846,894 (DACH), 1,345,118 (France), 2,183,057 (Iberia), 1,178,032 (Italy) and 839,987 (Nordics) rows, and tools/check.py reports PASS for all of them; the step took 4.06 s elapsed (5.02 s user, 1.06 s system, 6,564 KB peak memory). It also works when started from another folder (cd ~ && bash work/ospc-lab1-g7/steps/extracts.sh). With a wrong path (DATA=/no/such/file.csv) it now prints grep's error and exits with status 1 instead of printing done.
 
 ## Task 3: Auditing
 

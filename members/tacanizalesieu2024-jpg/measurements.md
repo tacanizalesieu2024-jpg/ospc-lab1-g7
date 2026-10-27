@@ -44,3 +44,9 @@
 - sample: 0.41 s elapsed, 0.91 s user, 0.10 s system, 137632 KB peak memory
 - full 8.4M: 5.69 s elapsed, 5.76 s user, 0.53 s system, 390308 KB peak memory, exit 0
 - check.py: PASS revenue_by_region_month.csv
+
+## Task 2 – after the fix
+- 4.06 s elapsed, 5.02 s user, 1.06 s system, 6564 KB peak memory, exit 0
+- All 6 extracts PASS (Benelux 1,006,912 … Nordics 839,987 rows)
+- DATA=/no/such/file.csv → "grep: No such file or directory", exit 1
+- Works from another folder (cd ~)
