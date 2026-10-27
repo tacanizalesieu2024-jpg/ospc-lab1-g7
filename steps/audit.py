@@ -1,5 +1,5 @@
 """Audit trail: one line per order with its revenue (audit_2025.csv)."""
-# Fix generated with Claude (Anthropic). Prompt: "ok start with the fixes for task 1 then we continue".
+# Fix generated with the help of Claude (Anthropic).
 # The output file is opened once, before the loop, instead of once per order.
 # Python buffers the lines and hands them to the kernel in large writes, so the
 # number of openat/write/close system calls no longer grows with the number of orders.

@@ -1,5 +1,5 @@
 """Revenue by region and month (revenue_by_region_month.csv)."""
-# Fix generated with Claude (Anthropic). Prompt: "start with the fixes for task 1".
+# Fix generated with the help of Claude (Anthropic).
 # The file is read in chunks and only the totals per region and month are kept,
 # instead of loading all orders (and two more copies of them) into memory at once.
 

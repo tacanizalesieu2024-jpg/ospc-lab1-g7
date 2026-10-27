@@ -1,7 +1,7 @@
 #!/bin/bash
 # One file per region for the regional managers, with the columns
 # order_id, order_date, product_category, quantity, unit_price.
-# Fix generated with Claude (Anthropic). Prompt: "ok start with the fixes for task 1 then we continue".
+# Fix generated with the help of Claude (Anthropic).
 # Reads DATA by absolute path instead of a path relative to the folder the script
 # moved into, stops on any error, and no longer hides grep's error messages.
 set -euo pipefail
