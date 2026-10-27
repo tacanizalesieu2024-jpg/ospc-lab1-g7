@@ -28,3 +28,14 @@
 - Manual run: "grep: No such file or directory", PIPESTATUS = 2 0 0
 - 2>/dev/null hides grep's error; exit 0 because last command is echo
 - Fix idea: absolute path via DATA=${DATA:-$HOME/data/sales_2025.csv}, set -euo pipefail, remove 2>/dev/null
+
+## Task 3 – audit
+| Data | Elapsed | User | System | Peak memory | Kernel share |
+|---|---|---|---|---|---|
+| sample 100k | 1.57 s | 1.61 s | 0.39 s | 130132 KB | ~20% |
+| full 8.4M | 82.21 s | 62.78 s | 20.04 s | 634632 KB | ~24% |
+- report.py kernel share for comparison: ~12%
+- strace -c on sample (100k): openat 100686, write 100001, close 100673 (≈1 of each per order)
+- audit_2025.csv (sample) = 1,952,269 bytes → with a 128 KiB buffer ≈ 15 write calls
+- close() ≠ saved on disk: data goes to the page cache; only fsync() forces it
+- Fix idea: open the file once before the loop, close once after
