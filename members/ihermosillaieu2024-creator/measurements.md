@@ -97,3 +97,61 @@ The current implementation opens the audit output file once, outside the loop, a
 The strace counts also include operations performed by Python and imported libraries, not only the audit loop.
 
 Reducing repeated file-opening and closing operations improves efficiency. Closing a file flushes Python's buffers but does not guarantee that the data has reached persistent storage.
+
+## Task 4 — Segmentation and Profiling
+
+**Dataset:** 100,000 orders
+**Tool:** cProfile and /usr/bin/time
+
+### Profiling results
+
+- Total profiler time: 1.893 s
+- Total function calls: 3,646,598
+- segment(): 100,000 calls, 1.059 s cumulative time
+- strptime(): 100,000 calls, 1.004 s cumulative time
+
+### Performance comparison
+
+| Metric | Original | Optimized |
+|---|---:|---:|
+| Elapsed (s) | 0.88 | 0.61 |
+| User (s) | 1.38 | 1.13 |
+| System (s) | 0.10 | 0.11 |
+| Peak RSS (KB) | 132888 | 132840 |
+
+Speedup: 1.44x
+Elapsed time reduction: 30.7%
+
+### Optimization and correctness
+
+The original implementation parsed the date of every order using datetime.strptime(). The optimized temporary version extracted the month directly from the YYYY-MM-DD string, avoiding repeated datetime parsing.
+
+Both implementations produced identical segments.csv files on the sample dataset, verified using cmp.
+
+The optimized version was tested in /tmp/segments_optimized.py without modifying the team repository.
+
+## Task 5 — Parallel Workers Experiment
+
+**Dataset:** 100,000 orders
+**Machine:** MacBook Air M1
+**Runs:** 3 per configuration
+
+| Workers | Run 1 (s) | Run 2 (s) | Run 3 (s) | Average (s) |
+|---|---:|---:|---:|---:|
+| 1 | 1.47 | 1.41 | 1.26 | 1.380 |
+| 2 | 1.94 | 0.87 | 0.84 | 1.217 |
+| 4 | 0.71 | 0.65 | 0.67 | 0.677 |
+| 8 | 0.75 | 0.70 | 0.65 | 0.700 |
+| 16 | 1.01 | 0.92 | 0.84 | 0.923 |
+
+### Findings
+
+The fastest average runtime was observed with 4 workers (0.677 s).
+
+Speedup relative to 1 worker: 2.04x.
+
+Increasing workers beyond 4 did not improve average performance on this sample. Additional workers can introduce scheduling overhead and resource contention.
+
+The 2-worker configuration showed substantial run-to-run variation, illustrating the importance of repeated measurements.
+
+These results describe the sample workload and should not be assumed to represent performance on the full dataset.
