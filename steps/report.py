@@ -1,4 +1,7 @@
 """Revenue by region and month (revenue_by_region_month.csv)."""
+# Fix generated with Claude (Anthropic). Prompt: "start with the fixes for task 1".
+# The file is read in chunks and only the totals per region and month are kept,
+# instead of loading all orders (and two more copies of them) into memory at once.
 
 import os
 
@@ -8,17 +11,18 @@ DATA = os.environ.get("DATA", os.path.expanduser("~/data/sales_2025.csv"))
 OUT = os.environ.get("OUT", os.path.expanduser("~/data/out"))
 os.makedirs(OUT, exist_ok=True)
 
-orders = pd.read_csv(DATA)
-size = orders.memory_usage(deep=True).sum() / 2**20
-print(f"report: loaded {len(orders):,} orders ({size:.0f} MiB)")
+CHUNK = 1_000_000
+COLUMNS = ["region", "order_date", "quantity", "unit_price"]
 
-orders["order_date"] = pd.to_datetime(orders["order_date"])
-orders["revenue"] = orders["quantity"] * orders["unit_price"]
+partials = []
+n = 0
+for chunk in pd.read_csv(DATA, usecols=COLUMNS, chunksize=CHUNK):
+    n += len(chunk)
+    month = pd.to_datetime(chunk["order_date"]).dt.month
+    revenue = chunk["quantity"] * chunk["unit_price"]
+    partials.append(revenue.groupby([chunk["region"], month]).sum())
+print(f"report: read {n:,} orders in chunks of {CHUNK:,}", flush=True)
 
-# The monthly tables first, then the whole year
-months = [orders[orders["order_date"].dt.month == m] for m in range(1, 13)]
-year = pd.concat(months)
-
-table = year.groupby(["region", year["order_date"].dt.month])["revenue"].sum().unstack()
+table = pd.concat(partials).groupby(level=[0, 1]).sum().unstack()
 table.round(2).to_csv(os.path.join(OUT, "revenue_by_region_month.csv"))
-print("report: done")
+print("report: done", flush=True)
