@@ -21,3 +21,10 @@
 - Linear: ~352,000 KB per extra million orders, ~153,000 KB baseline
 - Estimate for 8.4M: ~3,118,000 KB (~3.0 GiB) > 2 GiB limit → OOM kill
 - report.py | tee: log empty – stdout block-buffered in a pipe, SIGKILL loses the buffer
+
+## Task 2 – extracts
+- bash steps/extracts.sh → "extracts: done", echo $? = 0, all 6 files 0 bytes
+- Script cd's to ~/data/out/extracts, then reads ../data/sales_2025.csv → ~/data/out/data/sales_2025.csv (doesn't exist)
+- Manual run: "grep: No such file or directory", PIPESTATUS = 2 0 0
+- 2>/dev/null hides grep's error; exit 0 because last command is echo
+- Fix idea: absolute path via DATA=${DATA:-$HOME/data/sales_2025.csv}, set -euo pipefail, remove 2>/dev/null
