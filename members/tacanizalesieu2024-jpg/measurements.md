@@ -56,3 +56,16 @@
 - strace -c on sample: openat 686, write 17, close 673
 - full 8.4M: 16.95 s elapsed, 17.05 s user, 0.51 s system, 634692 KB peak memory
 - check.py: PASS audit_2025.csv (8,400,000 lines)
+
+## Task 4 – segments (before)
+- sample: 1.04 s elapsed, 1.51 s user, 0.14 s system, 132420 KB peak memory
+- full 8.4M: 46.07 s elapsed, 45.19 s user, 1.53 s system, 744464 KB peak memory
+- cProfile (sample, 1.917 s): segment() called 100,000 times, cumtime 1.048 s (~55%);
+  strptime 100,000 calls (0.995 s cum); locale.getlocale 100,004 calls
+
+## Task 4 – after the fix
+- vectorized, no chunks: 9.33 s elapsed, 6.91 s user, 3.00 s system, 1650792 KB peak memory
+- vectorized, size as int8: 6.15 s elapsed, 5.82 s user, 0.93 s system, 1259216 KB peak memory
+- final (chunked): 6.03 s elapsed, 6.02 s user, 0.61 s system, 374368 KB peak memory
+- cProfile on sample after: 454,991 calls in 0.432 s
+- check.py: PASS segments.csv

@@ -45,11 +45,11 @@ not whole screens.
 
 ## Task 4: Segmenting the orders
 
-- Symptom:
-- Commands and recordings you used, why you chose them, and what they showed:
-- Cause:
-- Fix:
-- Before and after (your measurements):
+- Symptom: segments.py produced a correct segments.csv but took 46.07 s on the 8.4 million orders, with user time (45.19 s) almost equal to elapsed time and little system time (1.53 s): the step was CPU-bound in Python's own code, not waiting for the kernel or the disk.
+- Commands and recordings you used, why you chose them, and what they showed: `/usr/bin/time` on the sample (1.04 s) and on the full file (46.07 s) to measure the step and split user from system time. `python3 -m cProfile -s tottime steps/segments.py` on the sample, to see which functions use the time: 3,646,598 function calls in 1.917 s; `segment()` was called 100,000 times (once per order) with a cumulative time of 1.048 s, about 55% of the run, and inside it `datetime.strptime` was also called 100,000 times (0.995 s cumulative), each call also checking the locale (`locale.getlocale`, 100,004 calls).
+- Cause: the script loops over the orders with `itertuples()` and calls the Python function `segment()` for every order. For each one it parses the date text with `strptime`, computes the value, chooses the size with if/elif, builds a string such as "Q2 medium" and updates a dictionary. That is 8.4 million interpreted function calls and date parses; the work is the same for every row and could be done on whole columns at once.
+- Fix: segments.py now reads the file in chunks of 1,000,000 orders and works on whole columns: `pd.to_datetime(...).dt.quarter` for the quarter, `np.select` with the same thresholds (500 and 100) for the size, stored as a 1-byte code instead of a string per order, and `groupby(...).size()` for the counts. The partial counts of the chunks are added together at the end, and the labels such as "Q1 large" are built only once per group. A first version without chunks and with the size as text was fast but peaked at 1,650,792 KB, more than twice the original, which is why the final version stores codes and reads in chunks.
+- Before and after (your measurements): Before: 46.07 s elapsed, 45.19 s user, 1.53 s system, 744,464 KB peak memory; cProfile on the sample: 3,646,598 calls in 1.917 s. After: 6.03 s elapsed, 6.02 s user, 0.61 s system, 374,368 KB peak memory (about 7.6 times faster and half the memory); cProfile on the sample: 454,991 calls in 0.432 s, with no `segment` or `strptime` per order. tools/check.py reports PASS for segments.csv.
 
 ## Task 5: Computing the statistics
 
