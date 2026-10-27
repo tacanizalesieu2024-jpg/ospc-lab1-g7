@@ -11,3 +11,13 @@
 - extracts: 6 files, all 0 bytes, yet the script printed "done"
 - python3 steps/report.py alone → Killed, echo $? = 137
 - memory.events: oom_kill 2, max 3938
+
+## Task 1 – memory growth (report.py)
+| Orders | Table | Elapsed | User | System | Peak memory |
+|---|---|---|---|---|---|
+| 1M | 106 MiB | 2.33 s | 2.41 s | 0.33 s | 504880 KB |
+| 2M | 211 MiB | 3.88 s | 3.94 s | 0.55 s | 856796 KB |
+| 4M | 423 MiB | 7.45 s | 7.04 s | 1.00 s | 1565004 KB |
+- Linear: ~352,000 KB per extra million orders, ~153,000 KB baseline
+- Estimate for 8.4M: ~3,118,000 KB (~3.0 GiB) > 2 GiB limit → OOM kill
+- report.py | tee: log empty – stdout block-buffered in a pipe, SIGKILL loses the buffer
