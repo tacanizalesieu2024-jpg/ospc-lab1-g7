@@ -22,3 +22,25 @@ For 4 million orders, the table occupies 423 MiB, but peak process memory is app
 Extrapolating the observed trend suggests that processing all 8.4 million orders could require approximately 3 GiB of memory, exceeding the container's 2 GiB limit.
 
 These measurements were collected on my own laptop using /usr/bin/time.
+
+## Task 1 — Full Dataset and OOM Investigation
+
+The full pipeline attempted to process 8,400,000 orders (887 MiB reported table size).
+
+During the report step, the Python process was killed.
+
+### Cgroup memory events
+
+| Event | Before | After |
+|---|---:|---:|
+| max | 114 | 4139 |
+| oom | 0 | 1 |
+| oom_kill | 0 | 1 |
+
+### Conclusion
+
+The increase in oom_kill from 0 to 1 confirms that the Linux kernel terminated a process due to the container's memory limit.
+
+The container has a 2 GiB memory limit, while the full dataset requires more memory than is available.
+
+The complete pipeline was later interrupted manually with Ctrl+C during segments.py, so its elapsed time of 138.10 seconds is not a successful full-run benchmark.
