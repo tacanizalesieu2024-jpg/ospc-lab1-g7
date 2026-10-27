@@ -50,3 +50,9 @@
 - All 6 extracts PASS (Benelux 1,006,912 … Nordics 839,987 rows)
 - DATA=/no/such/file.csv → "grep: No such file or directory", exit 1
 - Works from another folder (cd ~)
+
+## Task 3 – after the fix
+- sample: 0.53 s elapsed, 1.02 s user, 0.11 s system, 128404 KB peak memory
+- strace -c on sample: openat 686, write 17, close 673
+- full 8.4M: 16.95 s elapsed, 17.05 s user, 0.51 s system, 634692 KB peak memory
+- check.py: PASS audit_2025.csv (8,400,000 lines)
