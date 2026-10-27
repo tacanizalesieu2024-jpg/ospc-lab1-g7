@@ -20,3 +20,13 @@ Memory usage increases approximately linearly with the number of orders.
 The full dataset fails because the Python process requires more memory than the Docker container's 2 GiB limit.
 
 The memory.events file showed oom=1 and oom_kill=1 after the full pipeline run.
+
+### Task 1 — After optimization
+
+The report was optimized to process orders in chunks of 1,000,000 instead of loading the entire dataset into memory.
+
+| Orders | Elapsed | User | System | Peak memory | Result |
+|---|---|---|---|---|---|
+| 8,400,000 | 3.28 s | 3.88 s | 0.12 s | 396124 KB | OK |
+
+The optimized report completed successfully within the Docker container's 2 GiB memory limit.
