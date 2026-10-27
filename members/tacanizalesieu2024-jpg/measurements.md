@@ -69,3 +69,10 @@
 - final (chunked): 6.03 s elapsed, 6.02 s user, 0.61 s system, 374368 KB peak memory
 - cProfile on sample after: 454,991 calls in 0.432 s
 - check.py: PASS segments.csv
+
+## Task 5 – stats
+- old (16 workers): 11.18 s elapsed, 78.79 s user, 4.43 s system, 112804 KB peak memory
+- new (8 workers = nproc): 10.52 s elapsed, 74.01 s user, 3.82 s system, 111736 KB peak memory
+- simulated Ctrl-C (kill -INT -- -PID) on old: 16 workers left running, parent PID 1
+- simulated Ctrl-C on new: "stats: stopping 8 workers", exit 130, 0 workers left
+- check.py: PASS stats.csv

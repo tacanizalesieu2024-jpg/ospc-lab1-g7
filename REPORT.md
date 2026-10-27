@@ -53,11 +53,11 @@ not whole screens.
 
 ## Task 5: Computing the statistics
 
-- Symptom:
-- Commands and recordings you used, why you chose them, and what they showed:
-- Cause:
-- Fix:
-- Before and after (your measurements):
+- Symptom: stats.sh starts 16 workers by default, but it was not faster than with fewer workers (11.18 s with 16 against 10.52 s with 8). When the step was stopped with Ctrl-C, the script ended but its workers kept running in the background.
+- Commands and recordings you used, why you chose them, and what they showed: `bash tools/sweep.sh` to time the step with 1, 2, 4, 8 and 16 workers (3 runs each). Average elapsed: 36.6 s (1), 19.4 s (2), 12.0 s (4), 10.6 s (8), 11.5 s (16); `nproc` in the container is 8. To reproduce Ctrl-C reliably, the script was started in the background and, once the workers were running (`pgrep -f stats_worker`), sent SIGINT to its whole process group with `kill -INT -- -PID`, which is what Ctrl-C does. Then `ps -ef | grep "[s]tats_worker"` listed 16 workers still running, each with parent PID 1: the script was gone and the workers had been adopted by PID 1.
+- Cause: (1) The default of 16 workers is twice the 8 CPUs of the container. Beyond 8, workers only take turns on the same CPUs, which adds scheduling and start-up overhead (user time rose from 74.01 s to 78.79 s and system time from 3.82 s to 4.43 s) without adding computing power. (2) The workers are started with `&` in a non-interactive script, so bash makes them ignore SIGINT. Ctrl-C ended the script, but nothing told the workers to stop, so they became orphans and kept using CPU.
+- Fix: the default is now `WORKERS=${WORKERS:-$(nproc)}` (it can still be overridden). The script saves each worker's PID and sets `trap cleanup INT TERM`: on Ctrl-C or SIGTERM it sends SIGTERM to every worker, waits for them and exits with status 130. It also waits for each worker separately and fails if any worker fails (a plain `wait` always returned 0), and uses `set -euo pipefail`. The comment claiming "more workers, faster results" was corrected.
+- Before and after (your measurements): Before: 16 workers, 11.18 s elapsed, 78.79 s user, 4.43 s system; after the simulated Ctrl-C, 16 workers still running. After: 8 workers, 10.52 s elapsed, 74.01 s user, 3.82 s system; after the simulated Ctrl-C the script printed "stats: stopping 8 workers", exited with 130, and 0 workers were left. tools/check.py reports PASS for stats.csv (72 region-months).
 
 ## The worker experiment
 
