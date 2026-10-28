@@ -16,6 +16,7 @@ Where to find each detail (Section 3 of the handout has the same table):
 
 | Name | GitHub username | Laptop (model, operating system) | Cores and threads of the laptop | CPUs in the container (`nproc`) |
 |---|---|---|---|---|
+| Elena Santonja | @esantonjaieu2024-netizen | Apple MacBook Air 13-inch M5 (2026), macOS Tahoe 26.6.2 | 10 cores, 10 threads | 10 |
 | Marina Villasante | @mvillasanteieu2024-sudo | Apple MacBook Pro 14-inch M4 (2024), macOS Tahoe 26.6.2 | 10 cores, 10 threads | 10 |
 | Quique López | @QuiqueLopezF | Apple MacBook Air 13-inch, macOS 14.6 | 8 cores, 8 threads | 8 |
 | Ivan Hermosilla | @ihermosillaieu2024-creator | Apple MacBook Air M1 (2020), macOS Tahoe 26.5 | 8 cores, 8 threads | 8 |
