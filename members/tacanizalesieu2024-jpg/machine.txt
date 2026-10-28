@@ -1,6 +1,6 @@
 github_user: tacanizalesieu2024-jpg
-laptop: PASTE THE LAPTOP TEXT HERE
-date: 2026-10-28 13:54 UTC
+laptop: Apple MacBook Air (Apple M1), macOS 15.6.1
+date: 2026-10-28 13:55 UTC
 cpus_in_container: 8
 architecture: aarch64
 cpu: Apple - 
