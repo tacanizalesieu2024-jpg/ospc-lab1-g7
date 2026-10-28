@@ -102,3 +102,22 @@ The script printed "segments: done" and tools/check.py reported PASS for segment
 ### Conclusion
 The optimized script successfully generated the segmentation output while staying within the Docker memory limit.
 
+
+## Task 5 — Computing the statistics
+
+### How it works
+The script prepares the data, distributes the work across multiple workers, waits for them to finish, and combines the results into stats.csv.
+
+### My measurements
+
+| Elapsed time | User time | System time | Peak memory | Workers | Result |
+|---|---|---|---|---|---|
+| 6.14 s | 54.32 s | 3.25 s | 109628 KB | 10 | OK |
+
+### Output verification
+The script printed "stats: done with 10 workers".
+tools/check.py reported PASS for stats.csv, with 72 region-months as expected.
+
+### Conclusion
+The statistics were generated successfully using 10 parallel workers. The total user CPU time exceeds the elapsed time because multiple processes run in parallel. The peak memory reported by time does not necessarily include the combined memory of all workers.
+
