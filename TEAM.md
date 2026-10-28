@@ -21,3 +21,4 @@ Where to find each detail (Section 3 of the handout has the same table):
 | Quique López | @QuiqueLopezF | Apple MacBook Air 13-inch, macOS 14.6 | 8 cores, 8 threads | 8 |
 | Ivan Hermosilla | @ihermosillaieu2024-creator | Apple MacBook Air M1 (2020), macOS Tahoe 26.5 | 8 cores, 8 threads | 8 |
 | Tomás Cañizales | @tacanizalesieu2024-jpg | Apple MacBook Air (Apple M1), macOS 15.6.1 | 8 cores, 8 threads | 8 |
+| Alvaro Franco Rodriguez | @afrancoieu2024-prog | Apple MacBook Air 15-inch M3 2024, macOS Sonoma 14.6 | 8 cores, 8 threads | 8 |
