@@ -60,3 +60,24 @@ The corrected script uses the DATA variable with an absolute path, removes hidde
 ### Conclusion
 The corrected extracts.sh completed successfully and generated all six regional files. The files contain a total of 8,400,000 orders, confirming that the extraction works correctly.
 
+
+## Task 3 — Auditing
+
+### Problem
+The original audit.py opened and closed the output file for every order, causing too many system calls and making the program slow.
+
+### Fix
+The optimized script opens the output file only once and writes all orders using Python's buffering.
+
+### My measurements after optimization
+
+| Elapsed time | User time | System time | Peak memory | Result |
+|---|---|---|---|---|
+| 9.71 s | 10.04 s | 0.20 s | 643100 KB | OK |
+
+### Output verification
+The generated audit_2025.csv contains 8,400,000 lines.
+
+### Conclusion
+The optimized audit.py successfully processed all 8,400,000 orders. Opening the file only once reduces system calls and improves performance.
+
