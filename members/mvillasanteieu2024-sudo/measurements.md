@@ -30,3 +30,33 @@ The report was optimized to process orders in chunks of 1,000,000 instead of loa
 | 8,400,000 | 3.28 s | 3.88 s | 0.12 s | 396124 KB | OK |
 
 The optimized report completed successfully within the Docker container's 2 GiB memory limit.
+
+## Task 2 — Extracting data
+
+### Problem
+The original extracts.sh used an incorrect relative path to the input CSV file. As a result, it generated six empty regional files but still printed "extracts: done".
+
+### Fix
+The corrected script uses the DATA variable with an absolute path, removes hidden error messages, and uses set -euo pipefail to detect failures.
+
+### My measurements after the fix
+
+| Elapsed time | User time | System time | Peak memory | Result |
+|---|---|---|---|---|
+| 2.02 s | 2.80 s | 0.50 s | 8060 KB | OK |
+
+### Output verification
+
+| Region | Rows |
+|---|---|
+| Benelux | 1,006,912 |
+| DACH | 1,846,894 |
+| France | 1,345,118 |
+| Iberia | 2,183,057 |
+| Italy | 1,178,032 |
+| Nordics | 839,987 |
+| Total | 8,400,000 |
+
+### Conclusion
+The corrected extracts.sh completed successfully and generated all six regional files. The files contain a total of 8,400,000 orders, confirming that the extraction works correctly.
+
