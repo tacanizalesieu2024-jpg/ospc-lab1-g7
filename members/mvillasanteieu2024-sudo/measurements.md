@@ -81,3 +81,24 @@ The generated audit_2025.csv contains 8,400,000 lines.
 ### Conclusion
 The optimized audit.py successfully processed all 8,400,000 orders. Opening the file only once reduces system calls and improves performance.
 
+
+## Task 4 — Segmenting the orders
+
+### Problem
+The original segmentation script processed orders individually, making it inefficient for a large dataset.
+
+### Fix
+The optimized script uses pandas and NumPy vectorized operations and processes the data in chunks of 1,000,000 rows.
+
+### My measurements after optimization
+
+| Elapsed time | User time | System time | Peak memory | Result |
+|---|---|---|---|---|
+| 3.34 s | 3.99 s | 0.12 s | 385480 KB | OK |
+
+### Output verification
+The script printed "segments: done" and tools/check.py reported PASS for segments.csv.
+
+### Conclusion
+The optimized script successfully generated the segmentation output while staying within the Docker memory limit.
+
