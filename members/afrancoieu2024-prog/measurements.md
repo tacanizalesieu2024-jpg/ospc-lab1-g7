@@ -72,3 +72,34 @@ Growth is linear: about 105 MiB of table per million orders and about 350 MiB of
 2. On the whole file, 13.76 s of 46.92 s CPU time went into the kernel: 29% system, 71% user. The cause is about 25 million system calls (3 per order for 8.4 million orders). report.py (original, 4M orders) spent only 0.40 s system out of 5.36 s CPU time, about 7.5%, because it reads the file in a few large calls. After the fix, audit.py spends 0.08 s in the kernel (under 1%) and the whole run is 4.6 times faster (46.31 s to 10.13 s).
 3. No. The comment is wrong. `close()` flushes Python's buffer to the kernel with `write`, but the kernel keeps the data in its page cache and writes it to the disk later. Only `fsync()` forces it onto the disk. Data already handed to the kernel survives a crash of the Python process, but not a power loss or kernel crash. Opening and closing for each order therefore costs 3 system calls per order and buys almost no extra safety.
 4. The output is 1,952,269 bytes, and 1,952,269 / 131,072 = 14.9, so about 15 writes of 128 KiB (the last one partial). The fixed version made 17 writes in total, which is those ~15 plus the `print` and a couple of others. For the whole file (180,634,390 bytes) it would be about 1,379 writes instead of 8,400,000, which is 6,000 times fewer.
+
+## 6.2 Task 4: segmenting the orders
+- Prediction: the time goes into something done once per row in Python, not into reading the file
+- Original, sample (100,000 orders): 0.59 s elapsed, 1.15 s user, 0.05 s system, 132488 KB peak memory
+- Reading the whole file only (`wc -l`, 8,400,001 lines): 0.13 s elapsed, 0.00 s user, 0.13 s system, 6436 KB
+- Original, whole file (8,400,000 orders): 28.21 s elapsed, 28.61 s user, 0.21 s system, 750316 KB peak memory
+- User share of CPU time: 28.61 / (28.61 + 0.21) = 99.3%; the segments step takes about 200 times longer than reading the file
+
+### Profile (cProfile on the sample, total 1.085 s with profiling, 3,646,599 function calls)
+| Function | ncalls | tottime (s) | cumtime (s) |
+|---|---|---|---|
+| segments.py:15(segment) | 100,000 | 0.030 | 0.611 |
+| {built-in method strptime} | 100,000 | 0.035 | 0.581 |
+| _strptime.py:516(_strptime) | 100,000 | 0.265 | 0.507 |
+| _strptime.py:29(_getlang) | 100,004 | 0.014 | 0.108 |
+| locale.py:587(getlocale) | 100,004 | 0.022 | 0.094 |
+| array.py:818(__iter__) (itertuples) | 200,012 | 0.094 | 0.094 |
+| {method 'get' of 'dict' objects} | 408,763 | 0.037 | 0.037 |
+| c_parser_wrapper.py:203(read) (reading the CSV) | 1 | 0.028 | 0.030 |
+
+- Fixed (commit cee8918: vectorized, chunked), sample: 0.26 s elapsed, 0.83 s user, 0.03 s system, 139768 KB peak memory
+- Fixed, whole file: 3.89 s elapsed, 4.37 s user, 0.13 s system, 387352 KB peak memory; check.py PASS for segments.csv
+- Speed-up on the whole file: 28.21 s to 3.89 s (7.3 times); peak memory 750316 KB to 387352 KB (about half)
+
+### Diagnosis
+1. Symptom: segments.py takes 28 s, much longer than reading the file (0.13 s).
+2. The user/system split points to Python code, not the kernel: 28.61 s user against 0.21 s system.
+3. The profile shows `segment()` called 100,000 times, once per order, so 8.4 million times on the whole file. Inside it, `datetime.strptime` takes 0.579 of the 1.086 s (53%). It is pure Python parsing code (`_strptime`), and it also looks up the locale on every call (`_getlang`, `getlocale`, `normalize`, `_parse_localename`, 100,004 calls each, about 0.1 s). `itertuples()` adds 200,012 array iterations and the loop does 408,763 dict lookups.
+4. In total there are about 36 function calls per order (3,646,599 / 100,000), which is about 306 million for the whole file.
+5. Cause: one Python-level function call per row, with a string date parsed, a size label string built and a dict updated for every order.
+6. Fix: read the file in chunks of 1 million orders, compute the quarter with `pd.to_datetime(...).dt.quarter` and the value with a vectorized multiplication, classify the size with `np.select` into a 1-byte code, count with `groupby(...).size()` per chunk, add the partial counts, and build the labels ("Q1 large") once per group instead of once per order.
