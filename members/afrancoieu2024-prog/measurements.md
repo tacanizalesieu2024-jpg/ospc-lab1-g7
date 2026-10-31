@@ -103,3 +103,27 @@ Growth is linear: about 105 MiB of table per million orders and about 350 MiB of
 4. In total there are about 36 function calls per order (3,646,599 / 100,000), which is about 306 million for the whole file.
 5. Cause: one Python-level function call per row, with a string date parsed, a size label string built and a dict updated for every order.
 6. Fix: read the file in chunks of 1 million orders, compute the quarter with `pd.to_datetime(...).dt.quarter` and the value with a vectorized multiplication, classify the size with `np.select` into a 1-byte code, count with `groupby(...).size()` per chunk, add the partial counts, and build the labels ("Q1 large") once per group instead of once per order.
+
+## 6.3 Task 5: computing the statistics
+- Original stats.sh: `WORKERS=${WORKERS:-16}`, workers started with `&` in a loop and a plain `wait`; the container has 8 CPUs (`nproc` = 8)
+- Original, whole step (16 workers): 6.91 s elapsed, 49.11 s user, 2.67 s system, 111552 KB peak memory
+- Fixed (8 workers = nproc, commit fa96954): 6.55 s elapsed, 46.38 s user, 2.09 s system, 111448 KB peak memory (second run: 6.29 s, 44.67 s user, 2.09 s system, 111428 KB); check.py PASS (72 region-months)
+
+### Ctrl-C test (`timeout -s INT 4 bash steps/stats.sh`, which sends SIGINT to the whole process group like Ctrl-C)
+- Original: printed `stats: input ready`; `ps` then listed 16 processes `python3 steps/stats_worker.py K 16`, state Rl, running for 3 s, all with PPID 1 (adopted by PID 1 after the script ended). Two seconds later none were left: the whole step takes only about 7 s, so the orphans finished by themselves; on a long job they would have kept running
+- Fixed: printed `stats: stopping 8 workers`, and `ps` found no stats process left
+
+### Worker sweep (`bash tools/sweep.sh afrancoieu2024-prog`, mean of 3 runs, MacBook Air 15-inch M3, 8 cores, 8 threads, 8 CPUs in the container)
+| Workers | Elapsed (s) | Speed-up vs 1 worker | User (s) | System (s) |
+|---|---|---|---|---|
+| 1 | 29.09 | 1.00 | 29.66 | 0.65 |
+| 2 | 15.15 | 1.92 | 30.42 | 0.77 |
+| 4 | 8.57 | 3.39 | 33.34 | 1.02 |
+| 8 | 6.69 | 4.35 | 47.21 | 2.35 |
+| 16 | 7.86 | 3.70 | 55.86 | 3.30 |
+
+### Answers
+1. Do more workers make it faster? Up to 8, yes: 29.1 s with 1 worker, 6.7 s with 8 (4.35 times faster, 54% parallel efficiency). Beyond 8, no: 16 workers take 7.9 s, about 17% longer than 8, with 18% more user time and 40% more system time.
+2. Why? The container has 8 CPUs. With 16 workers the processes take turns on the same CPUs, and each extra worker adds its own interpreter start-up, numpy import and context switches without adding computing power. The speed-up with 8 workers stays below 8 because preparing the input and merging the results are not parallel, because the M3 mixes 4 performance and 4 efficiency cores, and because Docker and other programs use the CPUs too. The user time rising from 29.7 s to 47.2 s with 8 workers shows the same work costs more CPU time per worker when the CPUs and memory are shared.
+3. Leftover processes: bash ignores SIGINT for background jobs (`&`) in a non-interactive script. Ctrl-C sends SIGINT to every process of the foreground job, so the script died but the workers ignored it. With their parent gone they were adopted by PID 1. The fix stores each worker's PID and sets `trap cleanup INT TERM`: on Ctrl-C or SIGTERM it sends SIGTERM to every worker (which they do not ignore), waits for them and exits with status 130. It also waits for each PID separately and fails if any worker failed (a plain `wait` always returned 0).
+4. Default number of workers: `WORKERS=${WORKERS:-$(nproc)}`, one worker per CPU. That was the fastest or close to it, and it adapts to each laptop (it can still be overridden with the WORKERS variable).
