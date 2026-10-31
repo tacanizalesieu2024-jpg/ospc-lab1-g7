@@ -132,29 +132,31 @@ The optimized version was tested in /tmp/segments_optimized.py without modifying
 
 ## Task 5 — Parallel Workers Experiment
 
-**Dataset:** 100,000 orders
-**Machine:** MacBook Air M1
-**Runs:** 3 per configuration
+**Dataset:** Full sales_2025.csv (8,400,000 orders)
+**Machine:** Apple MacBook Air M1
+**Runs:** 3 per worker configuration
+
+The 72 stats_input files were regenerated from the full dataset before the final sweep.
 
 | Workers | Run 1 (s) | Run 2 (s) | Run 3 (s) | Average (s) |
 |---|---:|---:|---:|---:|
-| 1 | 1.47 | 1.41 | 1.26 | 1.380 |
-| 2 | 1.94 | 0.87 | 0.84 | 1.217 |
-| 4 | 0.71 | 0.65 | 0.67 | 0.677 |
-| 8 | 0.75 | 0.70 | 0.65 | 0.700 |
-| 16 | 1.01 | 0.92 | 0.84 | 0.923 |
+| 1 | 35.64 | 35.90 | 35.73 | 35.757 |
+| 2 | 18.78 | 18.91 | 18.76 | 18.817 |
+| 4 | 11.55 | 11.73 | 12.36 | 11.880 |
+| 8 | 10.02 | 10.52 | 10.68 | 10.407 |
+| 16 | 10.92 | 11.79 | 11.56 | 11.423 |
 
 ### Findings
 
-The fastest average runtime was observed with 4 workers (0.677 s).
+The fastest average elapsed time was achieved with 8 workers (10.407 s).
 
-Speedup relative to 1 worker: 2.04x.
+Speedup over 1 worker: approximately 3.44x.
+Parallel efficiency with 8 workers: approximately 43%.
 
-Increasing workers beyond 4 did not improve average performance on this sample. Additional workers can introduce scheduling overhead and resource contention.
+Increasing workers from 8 to 16 did not improve performance, likely due to scheduling overhead and resource contention.
 
-The 2-worker configuration showed substantial run-to-run variation, illustrating the importance of repeated measurements.
+The earlier sample experiment found 4 workers fastest. The optimal worker count depends on workload size.
 
-These results describe the sample workload and should not be assumed to represent performance on the full dataset.
 
 ## Task 5 — Signal Handling Investigation
 
